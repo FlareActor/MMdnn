@@ -1,4 +1,6 @@
 import sys as _sys
+reload(_sys)
+_sys.setdefaultencoding('utf-8')
 from six import text_type as _text_type
 import sys
 import imp
