@@ -503,17 +503,17 @@ bias_term={}, ntop=1)".format(
         ))
 
     def emit_Slice(self, IR_node):
-        """实现tf的strided_slice功能"""
-        shape = IR_node.get_attr('_output_shapes')[0]
-        shape = shape_to_list(shape)
-        starts = IR_node.get_attr("starts")
-        self.add_body(1,
-                      "n.{:<15} = L.Crop(n.{}, L.DummyData(shape=[dict(dim=[1, {}, {}, {}])], ntop=1),offset=[{}, {}, {}],axis=1, ntop=1)".format(
-                          IR_node.variable_name,
-                          self.parent_variable_name(IR_node),
-                          shape[-1], shape[1], shape[2],
-                          0, starts[1], starts[2]
-                      ))
+        """Convert tf.strided_slice to caffe.Slice"""
+        # shape = IR_node.get_attr('_output_shapes')[0]
+        # shape = shape_to_list(shape)
+        # starts = IR_node.get_attr("starts")
+        # self.add_body(1,
+        #               "n.{:<15} = L.Crop(n.{}, L.DummyData(shape=[dict(dim=[1, {}, {}, {}])], ntop=1),offset=[{}, {}, {}],axis=1, ntop=1)".format(
+        #                   IR_node.variable_name,
+        #                   self.parent_variable_name(IR_node),
+        #                   shape[-1], shape[1], shape[2],
+        #                   0, starts[1], starts[2]
+        #               ))
         pass
 
     def emit_Pack(self, IR_node):
@@ -532,6 +532,13 @@ bias_term={}, ntop=1)".format(
 
     def emit_Mul(self, IR_node):
         self.emit_Scale(IR_node)
+
+    def emit_Sigmoid(self, IR_node):
+        """Implement Caffe.Sigmoid"""
+        self.add_body(1, "n.{:<15} = L.Sigmoid(n.{},ntop=1)".format(
+            IR_node.variable_name,
+            self.parent_variable_name(IR_node),
+        ))
 
 
         # def emit_Square(self, IR_node):
