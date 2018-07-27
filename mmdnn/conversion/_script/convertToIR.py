@@ -89,7 +89,9 @@ def _convert(args):
     elif args.srcFramework == 'pytorch':
         assert inputshape != None
         from mmdnn.conversion.pytorch.pytorch_parser import PytorchParser
-        parser = PytorchParser(args.network, inputshape[0])
+        model = args.network or args.weights
+        assert model != None
+        parser = PytorchParser(model, inputshape[0])
 
     elif args.srcFramework == 'torch' or args.srcFramework == 'torch7':
         from mmdnn.conversion.torch.torch_parser import TorchParser
@@ -103,7 +105,7 @@ def _convert(args):
 
     elif args.srcFramework == 'darknet':
         from mmdnn.conversion.darknet.darknet_parser import DarknetParser
-        parser = DarknetParser(args.network, args.weights, args.darknetYolo)
+        parser = DarknetParser(args.network, args.weights, args.darknetStart)
 
     elif args.srcFramework == 'coreml':
         from mmdnn.conversion.coreml.coreml_parser import CoremlParser
@@ -178,10 +180,10 @@ def _get_parser():
 
     # Darknet
     parser.add_argument(
-        '--darknetYolo',
+        '--darknetStart',
         type=_text_type,
-        choices=["yolov3", "yolov2"],
-        help='[Darknet] Convert the specific yolo model.')
+        choices=["0", "1"],
+        help='[Darknet] Parse the darkent model weight file from the start.')
 
     return parser
 
