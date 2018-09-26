@@ -12,6 +12,7 @@ import mmdnn.conversion.common.IR.graph_pb2 as graph_pb2
 from mmdnn.conversion.common.IR.graph_pb2 import NodeDef, GraphDef, DataType
 from mmdnn.conversion.common.utils import *
 from mmdnn.conversion.common.DataStructure.parser import Parser
+from tensorflow.tools.graph_transforms import TransformGraph
 
 
 class TensorflowParser(Parser):
@@ -21,7 +22,6 @@ class TensorflowParser(Parser):
         "train_op",
         "save",
         "gradients",
-        "init",
         "global_step",
         "distort_image",
         "Adagrad",
@@ -56,12 +56,18 @@ class TensorflowParser(Parser):
         7  : graph_pb2.DT_STRING,
         9  : graph_pb2.DT_INT64,
         10 : graph_pb2.DT_BOOL,
+        19 : graph_pb2.DT_FLOAT16
     }
 
 
     @property
     def src_graph(self):
         return self.tf_graph
+
+
+    @staticmethod
+    def _shapeToStr(shapes):
+        return [dim.size if dim.size > 0 else 1 for dim in shapes.dim]
 
 
     @staticmethod
@@ -224,8 +230,39 @@ class TensorflowParser(Parser):
         else:
             self.tf_graph = TensorflowGraph(model)
 
-        self.tf_graph.build()
+        # Graph Transform
+        transforms = ["fold_constants(ignore_errors=true)"]
 
+        #  Get input node name
+        if not in_nodes:
+            in_nodes = {}
+            for node in model.node:
+                if node.op == 'Placeholder':
+                    in_node_name = str(node.name) + ':0'
+                    in_node_shape = node.attr['_output_shapes'].list.shape[0]
+                    in_node_shape_str = self._shapeToStr(in_node_shape)
+                    in_nodes[in_node_name] = in_node_shape_str
+
+        transformed_graph_def = TransformGraph(model, in_nodes.keys(),
+                                            dest_nodes, transforms)
+
+        dtype = tensorflow.float32
+        with tensorflow.Graph().as_default() as g:
+            input_map = {}
+            for in_node in in_nodes:
+                x = tensorflow.placeholder(dtype, shape = in_nodes[in_node])
+                input_map[in_node] = x
+
+            tensorflow.import_graph_def(transformed_graph_def, name='', input_map=input_map)
+
+        with tensorflow.Session(graph = g) as sess:
+
+            meta_graph_def = tensorflow.train.export_meta_graph(filename='./my-model.meta')
+            model = meta_graph_def.graph_def
+
+
+        self.tf_graph = TensorflowGraph(model)
+        self.tf_graph.build()
 
     @classmethod
     def _skip_node(cls, source_node):
@@ -346,6 +383,8 @@ class TensorflowParser(Parser):
             return
 
         variable = self.tf_graph.get_node(add_node.in_edges[1])
+        if variable.type != "Identity":
+            return
         variable = self.tf_graph.get_node(variable.in_edges[0])
 
         assert variable.layer.attr['shape'].shape.dim[0].size == IR_node.attr['kernel_shape'].list.i[-1]
@@ -381,6 +420,8 @@ class TensorflowParser(Parser):
         IR_node = self._convert_identity_operation(source_node, new_op='DataInput')
         # shape
         TensorflowParser._copy_shape(source_node, IR_node)
+        IR_node.attr['shape'].shape.dim[0].size = -1
+        IR_node.attr['_output_shapes'].list.shape[0].dim[0].size = -1
 
 
     def rename_Conv2D(self, source_node):
@@ -407,7 +448,6 @@ class TensorflowParser(Parser):
             self.set_weight(source_node.name, 'weights', self.ckpt_data[W.name])
 
         assign_IRnode_values(IR_node, kwargs)
-
         # output[0] : B
         self._get_bias(source_node, IR_node)
 
@@ -420,6 +460,10 @@ class TensorflowParser(Parser):
 
 
     def rename_Relu(self, source_node):
+        self._convert_identity_operation(source_node)
+
+
+    def rename_Softmax(self, source_node):
         self._convert_identity_operation(source_node)
 
 
@@ -457,12 +501,10 @@ class TensorflowParser(Parser):
 
 
     def rename_Abs(self, source_node):
-        # print(source_node.layer)
         IR_node = self._convert_identity_operation(source_node, in_edge_count = 1, new_op = 'Abs')
 
 
     def rename_Square(self, source_node):
-        # print(source_node.layer)
         IR_node = self._convert_identity_operation(source_node, in_edge_count = 1, new_op = 'Square')
 
 
@@ -799,6 +841,27 @@ class TensorflowParser(Parser):
             strides = self.get_parent(source_node.name, [3]).layer.attr['value'].tensor
             strides = tensor_util.MakeNdarray(strides).tolist()
             kwargs['strides'] = strides
+
+        assign_IRnode_values(IR_node, kwargs)
+
+
+    def rename_Slice(self, source_node):
+        input_node_begin = self.get_parent(source_node.name, [1])
+        input_node_size = self.get_parent(source_node.name, [2])
+
+        shape = self.get_parent(source_node.name, [0]).layer.attr['value'].tensor
+        shape = tensor_util.MakeNdarray(shape).tolist()
+
+        begin = input_node_begin.get_attr("axis")
+
+        IR_node = self._convert_identity_operation(source_node, in_edge_count=2, new_op='Slice')
+
+        # TODO:  only for 1D
+        end = int(input_node_size.layer.attr['value'].tensor.int_val[0]) + begin
+        kwargs = {
+            'begin_mask' : begin,
+            'end_mask' : end
+        }
 
         assign_IRnode_values(IR_node, kwargs)
 

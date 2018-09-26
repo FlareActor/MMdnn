@@ -45,10 +45,11 @@ class DarknetParser(Parser):
 
         fp.close()
 
+        # yolo3(608) start at 1, yolo2(608) start at 0. yolo2(416) start at 1, yolo3(416) start at 0
         if yolo == "1":
-            self.start = 1  #yolov2
+            self.start = 1  #yolov3
         else:
-            self.start = 0   #yolov3 resnet
+            self.start = 0   #yolov2
 
         model = parse_cfg(model_config)
         self.dk_graph = DarknetGraph(model)
@@ -294,10 +295,10 @@ class DarknetParser(Parser):
 
 
     def rename_upsample(self, source_node):
-        IR_node = self._convert_identity_operation(source_node, new_op='upsample')
-        stride = source_node.get_attr('strides')
+        IR_node = self._convert_identity_operation(source_node, new_op='UpSampling2D')
+        scales = source_node.get_attr('scales')
         kwargs = {}
-        kwargs['strides'] = stride
+        kwargs['scales'] = scales
 
         assign_IRnode_values(IR_node, kwargs)
 

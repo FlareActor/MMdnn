@@ -127,10 +127,15 @@ def RefactorModel():
                 np.save(outfile, self.output_weights)
 
         comment = "\n    # if a GPU is available, change mx.cpu() to mx.gpu()"
+        # We use the real_name for specifying the input layer in data_names
+        # since MXNet API wants the actual name of the layer. On the other
+        # hand, the module API wants the last symbol in the symbol chain, so
+        # for the output node we need to use the actual python variable name
+        # of the last layer (real_variable_name).
         last_line = "{:<15} = mx.mod.Module(symbol = {}, context = mx.cpu(), data_names = ['{}'])".format(
             "model",
             ', '.join([self.IR_graph.get_node(name).real_variable_name for name in self.IR_graph.output_layers if self.IR_graph.get_node(name).type != 'Pack']),
-            ', '.join([self.IR_graph.get_node(name).real_variable_name for name in self.IR_graph.input_layers if self.IR_graph.get_node(name).type != 'Const']))
+            ', '.join([self.IR_graph.get_node(name).real_name for name in self.IR_graph.input_layers if self.IR_graph.get_node(name).type != 'Const']))
 
         self.add_body(1, comment)
         self.add_body(1, last_line)
@@ -777,7 +782,7 @@ def predict(model, labels, url):
                 IR_node.name
         )
         return code
-    
+
     def emit_PRelu(self, IR_node):
         slope = IR_node.get_attr('gamma')
         code = "{:<15} = mx.sym.LeakyReLU(data = {}, slope = {}, act_type = '{}', name = '{}')".format(
@@ -920,10 +925,21 @@ def predict(model, labels, url):
 
     def emit_Mul(self, IR_node):
 
+        # code = "{:<15} = mx.sym.broadcast_mul({}, {})".format(
+        #         IR_node.variable_name,
+        #         self.parent_variable_name(IR_node),
+        #         self.parent_variable_name(IR_node, [1]))
+        
+        if IR_node.name in self.weights and 'weights' in self.weights[IR_node.name]:
+            second_node = "mx.sym.Variable('{}', shape=(1,))".format(IR_node.name+'_weight')
+            self.output_weights[IR_node.name + '_weight'] = [self.weights[IR_node.name]['weights']]
+        else:
+            second_node = self.parent_variable_name(IR_node, [1])
+
         code = "{:<15} = mx.sym.broadcast_mul({}, {})".format(
-                IR_node.variable_name,
-                self.parent_variable_name(IR_node),
-                self.parent_variable_name(IR_node, [1]))
+        IR_node.variable_name,
+        self.parent_variable_name(IR_node),
+        second_node)
 
         return code
 

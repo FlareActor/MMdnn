@@ -301,11 +301,11 @@ def KitModel(weight_file = None):
 
 
     def emit_UpSampling2D(self, IR_node):
-        size = IR_node.get_attr('size')
-        size = tuple(size)
+        scales = IR_node.get_attr('scales')
+        scales = tuple(scales)
         self.add_body(1, "{:<15} = tf.keras.layers.UpSampling2D(size={})({})".format(
             IR_node.variable_name,
-            size,
+            scales,
             self.parent_variable_name(IR_node)))
 
 
@@ -318,9 +318,20 @@ def KitModel(weight_file = None):
 
 
     def emit_Mul(self, IR_node):
-        self.add_body(1, "{:<15} = {}".format(
+        
+        if IR_node.name in self.weights_dict and 'weights' in self.weights_dict[IR_node.name]:
+            weight_str = "* tf.Variable(__weights_dict['{}'].get('weights',1.0))".format(IR_node.name)
+        else:
+            weight_str = ""
+        
+        # self.add_body(1, "{:<15} = {}".format(
+        #     IR_node.variable_name,
+        #     ' * '.join('%s' % self.IR_graph.get_node(s).real_variable_name for s in IR_node.in_edges)))
+
+        self.add_body(1,"{:<15} = {}{}".format(
             IR_node.variable_name,
-            ' * '.join('%s' % self.IR_graph.get_node(s).real_variable_name for s in IR_node.in_edges)))
+            ' * '.join('%s' % self.IR_graph.get_node(s).real_variable_name for s in IR_node.in_edges),
+            weight_str))
 
     def emit_Const(self, IR_node):
         if 'dtype' in IR_node.layer.attr:
@@ -605,11 +616,11 @@ def KitModel(weight_file = None):
 def convolution(input, name, group, **kwargs):
     w = tf.Variable(__weights_dict[name]['weights'], trainable=is_train, name=name + "_weight")
     if group == 1:
-        layer = tf.nn.convolution(input, w, **kwargs)
+        layer = tf.nn.convolution(input, w, name=name, **kwargs)
     else:
         weight_groups = tf.split(w, num_or_size_splits=group, axis=-1)
         xs = tf.split(input, num_or_size_splits=group, axis=-1)
-        convolved = [tf.nn.convolution(x, weight, **kwargs) for
+        convolved = [tf.nn.convolution(x, weight, name=name, **kwargs) for
                     (x, weight) in zip(xs, weight_groups)]
         layer = tf.concat(convolved, axis=-1)
 

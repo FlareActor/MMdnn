@@ -10,6 +10,7 @@ from six import text_type as _text_type
 from PIL import Image
 
 
+
 class TestKit(object):
 
     truth = {
@@ -99,6 +100,7 @@ class TestKit(object):
             'resnet_v1_101' : lambda path : TestKit.ZeroCenter(path, 224),
             'resnet_v1_152' : lambda path : TestKit.ZeroCenter(path, 224),
             'resnet_v2_50'  : lambda path : TestKit.Standard(path, 299),
+            'resnet_v2_101' : lambda path : TestKit.Standard(path, 299),
             'resnet_v2_152' : lambda path : TestKit.Standard(path, 299),
             'resnet_v2_200' : lambda path : TestKit.Standard(path, 299),
             'resnet152'     : lambda path : TestKit.Standard(path, 299),
@@ -109,6 +111,7 @@ class TestKit(object):
             'mobilenet_v2_1.0_224'  : lambda path : TestKit.Standard(path, 224),
             'nasnet-a_large'     : lambda path : TestKit.Standard(path, 331),
             'inception_resnet_v2' : lambda path : TestKit.Standard(path, 299),
+            'facenet'           : lambda path: TestKit.Standard(path, 160),
         },
 
         'keras' : {
@@ -171,8 +174,8 @@ class TestKit(object):
 
 
         'darknet' : {
-             'yolov3'        : lambda path : TestKit.Identity(path, 416),
-             'yolov2'        : lambda path : TestKit.Identity(path, 416),
+            'yolov3'        : lambda path : TestKit.Identity(path, 608),
+            'yolov2'        : lambda path : TestKit.Identity(path, 608),
         },
 
 
@@ -329,7 +332,6 @@ class TestKit(object):
         else:
             self.result = predict
             print (self.result)
-
 
     @staticmethod
     def print_intermediate_result(intermediate_output, if_transpose=False):

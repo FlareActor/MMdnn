@@ -37,6 +37,7 @@ class Keras2Emitter(Emitter):
         else:
             network_path = model[0]
             weight_path = model[1]
+            self._load_weights(weight_path)
 
         self.IR_graph = IRGraph(network_path)
         self.IR_graph.build()
@@ -51,7 +52,7 @@ from keras.models import Model
 from keras import layers
 import keras.backend as K
 import numpy as np
-import keras_applications
+import keras.layers.core as core
 
 
 def load_weights_from_file(weight_file):
@@ -139,6 +140,8 @@ def KitModel(weight_file = None):
 
 
     def _emit_merge(self, IR_node, func):
+        if len(IR_node.in_edges) == 1:
+            IR_node.in_edges.append(IR_node.in_edges[0])
         inputs = ', '.join('%s' % self.IR_graph.get_node(i).real_variable_name for i in IR_node.in_edges)
         axis = ' axis = {},'.format(IR_node.get_attr('axis')) if 'axis' in IR_node.layer.attr else ""
         self.add_body(1, "{:<15} = layers.{}(name = '{}', inputs = [{}])".format(
@@ -243,6 +246,18 @@ def KitModel(weight_file = None):
 
     def emit_UNKNOWN(self, IR_node):
         print (IR_node.name)
+
+    ##add mul op, just implement layer * constant
+    def emit_Mul(self, IR_node):
+        if IR_node.name in self.weights_dict and 'weights' in self.weights_dict[IR_node.name]:
+            self.used_layers.add('KerasMul')
+            weight_factor =  "weights_dict['{}'].get('weights',1.0)".format(IR_node.name)
+            self.add_body(1, "{:<15} = mul_constant(weight_factor={}, layer_name= {})".format(
+                IR_node.variable_name,
+                weight_factor,
+                ''.join(self.IR_graph.get_node(IR_node.in_edges[0]).real_variable_name)))
+        else:
+            raise NotImplementedError()
 
 
     def emit_Add(self, IR_node):
@@ -512,7 +527,6 @@ def KitModel(weight_file = None):
         pass
 
 
-
     def emit_Shape(self, IR_node):
         pass
 
@@ -528,13 +542,6 @@ def KitModel(weight_file = None):
         pass
 
 
-
-
-
-
-
-
-
     def emit_SeparableConv(self, IR_node):
         assert len(IR_node.get_attr("strides")) == 4
         return self._emit_convolution(IR_node, "layers.SeparableConv2D")
@@ -542,23 +549,26 @@ def KitModel(weight_file = None):
 
     def emit_Relu6(self, IR_node):
         try:
+            # Keras == 2.1.6
             from keras.applications.mobilenet import relu6
             str_relu6 = 'keras.applications.mobilenet.relu6'
+            self.add_body(1, "{:<15} = layers.Activation({}, name = '{}')({})".format(
+                IR_node.variable_name,
+                str_relu6,
+                IR_node.name,
+                self.IR_graph.get_node(IR_node.in_edges[0]).real_variable_name))
         except:
-            from keras_applications import mobilenet_v2
-            mobilenet_v2.layers.ReLU
-            str_relu6 = "keras_applications.mobilenet_v2.layers.ReLU(6, name='relu6')"
-
-        self.add_body(1, "{:<15} = layers.Activation({}, name = '{}')({})".format(
-            IR_node.variable_name,
-            str_relu6,
-            IR_node.name,
-            self.IR_graph.get_node(IR_node.in_edges[0]).real_variable_name))
+            # Keras == 2.2.2
+            from keras.layers import ReLU
+            self.add_body(1, "{:<15} = layers.ReLU(6, name = '{}')({})".format(
+                IR_node.variable_name,
+                IR_node.name,
+                self.IR_graph.get_node(IR_node.in_edges[0]).real_variable_name))
 
 
     def emit_DepthwiseConv(self, IR_node):
         try:
-            keras.applications.mobilenet.DepthwiseConv2D
+            from keras.applications.mobilenet import DepthwiseConv2D
             self._emit_convolution(IR_node, 'keras.applications.mobilenet.DepthwiseConv2D')
         except:
             self._emit_convolution(IR_node, 'layers.DepthwiseConv2D')
@@ -587,12 +597,11 @@ def KitModel(weight_file = None):
             self.parent_variable_name(IR_node)
         ))
 
-    def emit_upsample(self, IR_node):
-        self.add_body(1, "{:<15} = layers.UpSampling2D(name='{}', size= ({},{}), data_format = 'channels_last')({})".format(
+    def emit_UpSampling2D(self, IR_node):
+        self.add_body(1, "{:<15} = layers.UpSampling2D(name='{}', size= ({}), data_format = 'channels_last')({})".format(
             IR_node.variable_name,
             IR_node.name,
-            IR_node.get_attr('strides'),
-            IR_node.get_attr('strides'),
+            IR_node.get_attr('scales'),
             self.parent_variable_name(IR_node)
         ))
 
@@ -648,6 +657,14 @@ def KitModel(weight_file = None):
             IR_node.get_attr("noobject_scale"),
             IR_node.get_attr("coord_scale"),
             ]
+
+    def _layer_KerasMul(self):
+        self.add_body(0, '''
+def mul_constant(weight_factor, layer_name):
+    weight = core.Lambda(lambda x: x*weight_factor)
+    weight(layer_name)
+    return weight.output
+''')
 
     def _layer_Yolo(self):
         self.add_body(0, '''
