@@ -2,55 +2,8 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="433f0dff-e7f1-43fa-b663-09fb94549d0c" name="Default" comment="">
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/.travis.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/_config.yml" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/mmdnn/conversion/examples/paddle/models/__init__.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/mmdnn/conversion/examples/tensorflow/models/inception_resnet_v1.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/requirements/linux-py2.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/requirements/linux-py3.txt" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/requirements/select_requirements.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/test.sh" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_caffe.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_cntk.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_coreml.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_darknet.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_keras.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_mxnet.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_paddle.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_pytorch.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_tensorflow.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/test_tensorflow_frozen.py" />
-      <change type="NEW" beforePath="" afterPath="$PROJECT_DIR$/tests/utils.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/README.md" afterPath="$PROJECT_DIR$/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/_script/IRToModel.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/_script/IRToModel.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/_script/convertToIR.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/_script/convertToIR.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/caffe/mapper.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/caffe/mapper.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/cntk/README.md" afterPath="$PROJECT_DIR$/mmdnn/conversion/cntk/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/cntk/cntk_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/cntk/cntk_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/cntk/cntk_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/cntk/cntk_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/common/IR/ops.pbtxt" afterPath="$PROJECT_DIR$/mmdnn/conversion/common/IR/ops.pbtxt" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/common/utils.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/common/utils.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/coreml/coreml_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/coreml/coreml_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/darknet/README.md" afterPath="$PROJECT_DIR$/mmdnn/conversion/darknet/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/darknet/darknet_graph.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/darknet/darknet_graph.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/darknet/darknet_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/darknet/darknet_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/examples/imagenet_test.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/examples/imagenet_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/examples/keras/imagenet_test.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/examples/keras/imagenet_test.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/examples/tensorflow/extractor.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/examples/tensorflow/extractor.py" />
+      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/.idea/workspace.xml" afterPath="$PROJECT_DIR$/.idea/workspace.xml" />
       <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/keras/keras2_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/keras/keras2_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/mxnet/mxnet_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/mxnet/mxnet_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/mxnet/mxnet_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/mxnet/mxnet_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/onnx/onnx_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/onnx/onnx_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/paddle/paddle_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/paddle/paddle_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/pytorch/README.md" afterPath="$PROJECT_DIR$/mmdnn/conversion/pytorch/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/pytorch/pytorch_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/pytorch/pytorch_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/README.md" afterPath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/README.md" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_emitter.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_emitter.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_frozenparser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_frozenparser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_graph.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_graph.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_parser.py" afterPath="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_parser.py" />
-      <change type="MODIFICATION" beforePath="$PROJECT_DIR$/tests/test_conversion_imagenet.py" afterPath="$PROJECT_DIR$/tests/test_conversion_imagenet.py" />
     </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="TRACKING_ENABLED" value="true" />
@@ -61,13 +14,13 @@
   </component>
   <component name="FileEditorManager">
     <leaf>
-      <file leaf-file-name="caffe_emitter.py" pinned="false" current-in-tab="true">
-        <entry file="file://$PROJECT_DIR$/mmdnn/conversion/caffe/caffe_emitter.py">
+      <file leaf-file-name="keras2_emitter.py" pinned="false" current-in-tab="true">
+        <entry file="file://$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="599">
-              <caret line="503" column="0" lean-forward="true" selection-start-line="503" selection-start-column="0" selection-end-line="503" selection-end-column="0" />
+            <state relative-caret-position="237">
+              <caret line="383" column="0" lean-forward="true" selection-start-line="383" selection-start-column="0" selection-end-line="383" selection-end-column="0" />
               <folding>
-                <element signature="e#367#398#0" expanded="true" />
+                <element signature="e#352#380#0" expanded="true" />
               </folding>
             </state>
           </provider>
@@ -83,6 +36,13 @@
       <find>pad</find>
       <find>emit_</find>
       <find>zeropad</find>
+      <find>relu</find>
+      <find>print</find>
+      <find>Mul</find>
+      <find>not</find>
+      <find>pass</find>
+      <find>Leaky</find>
+      <find>pRelu</find>
     </findStrings>
     <dirStrings>
       <dir>$PROJECT_DIR$</dir>
@@ -110,6 +70,7 @@
         <option value="$PROJECT_DIR$/mmdnn/conversion/_script/dump_code.py" />
         <option value="$PROJECT_DIR$/mmdnn/conversion/tensorflow/tensorflow_parser.py" />
         <option value="$PROJECT_DIR$/mmdnn/conversion/caffe/caffe_emitter.py" />
+        <option value="$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py" />
       </list>
     </option>
   </component>
@@ -120,9 +81,10 @@
     <sorting>DEFINITION_ORDER</sorting>
   </component>
   <component name="ProjectFrameBounds" extendedState="6">
+    <option name="x" value="49" />
     <option name="y" value="22" />
     <option name="width" value="1440" />
-    <option name="height" value="829" />
+    <option name="height" value="835" />
   </component>
   <component name="ProjectView">
     <navigator currentView="ProjectPane" proportions="" version="1">
@@ -140,7 +102,6 @@
     </navigator>
     <panes>
       <pane id="Scope" />
-      <pane id="Scratches" />
       <pane id="ProjectPane">
         <subPane>
           <expand>
@@ -159,10 +120,18 @@
               <item name="mmdnn" type="462c0819:PsiDirectoryNode" />
               <item name="conversion" type="462c0819:PsiDirectoryNode" />
             </path>
+            <path>
+              <item name="MMdnn-dev" type="b2602c69:ProjectViewProjectNode" />
+              <item name="MMdnn-dev" type="462c0819:PsiDirectoryNode" />
+              <item name="mmdnn" type="462c0819:PsiDirectoryNode" />
+              <item name="conversion" type="462c0819:PsiDirectoryNode" />
+              <item name="keras" type="462c0819:PsiDirectoryNode" />
+            </path>
           </expand>
           <select />
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -207,7 +176,7 @@
     <servers />
   </component>
   <component name="ToolWindowManager">
-    <frame x="0" y="22" width="1440" height="835" extended-state="6" />
+    <frame x="6" y="22" width="1440" height="835" extended-state="6" />
     <editor active="true" />
     <layout>
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
@@ -310,18 +279,10 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="0">
-          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-        </state>
-      </provider>
-    </entry>
     <entry file="file://$PROJECT_DIR$/mmdnn/conversion/caffe/network.py">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -329,7 +290,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="180">
           <caret line="20" column="29" lean-forward="true" selection-start-line="20" selection-start-column="29" selection-end-line="20" selection-end-column="29" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -337,7 +297,6 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
         </state>
       </provider>
     </entry>
@@ -346,7 +305,6 @@
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="-1929">
             <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-            <folding />
           </first_editor>
           <second_editor />
         </state>
@@ -354,10 +312,33 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/mmdnn/conversion/caffe/caffe_emitter.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="599">
-          <caret line="503" column="0" lean-forward="true" selection-start-line="503" selection-start-column="0" selection-end-line="503" selection-end-column="0" />
+        <state relative-caret-position="282">
+          <caret line="515" column="26" lean-forward="true" selection-start-line="515" selection-start-column="26" selection-end-line="515" selection-end-column="26" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mmdnn/conversion/examples/keras/imagenet_test.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="119">
+          <caret line="130" column="29" lean-forward="true" selection-start-line="130" selection-start-column="29" selection-end-line="130" selection-end-column="29" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file:///usr/local/Cellar/python/2.7.13/Frameworks/Python.framework/Versions/2.7/lib/python2.7/site-packages/keras/layers/advanced_activations.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="241">
+          <caret line="90" column="8" lean-forward="false" selection-start-line="90" selection-start-column="8" selection-end-line="90" selection-end-column="8" />
+          <folding />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/mmdnn/conversion/keras/keras2_emitter.py">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="237">
+          <caret line="383" column="0" lean-forward="true" selection-start-line="383" selection-start-column="0" selection-end-line="383" selection-end-column="0" />
           <folding>
-            <element signature="e#367#398#0" expanded="true" />
+            <element signature="e#352#380#0" expanded="true" />
           </folding>
         </state>
       </provider>
