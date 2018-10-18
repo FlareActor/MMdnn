@@ -404,10 +404,17 @@ class MXNetParser(Parser):
 
         # weights
         if self.weight_loaded:
+            weight_name = source_node.name + "_weight"
+            # if source_node.name == "dense0_fwd":
+            #     weight_name = "dense0_weight"
+            # elif source_node.name == "pre_fc1":
+            #     weight_name = "fc1_weight"
+            # else:
+            #     pass
             if self.data_format == 'NM':
-                self.set_weight(source_node.name, "weights", self.weight_data.get(source_node.name + "_weight").asnumpy().transpose((1, 0)))
+                self.set_weight(source_node.name, "weights", self.weight_data.get(weight_name).asnumpy().transpose((1, 0)))
             else:
-                weight = self.weight_data.get(source_node.name + "_weight").asnumpy().transpose((1, 0))
+                weight = self.weight_data.get(weight_name).asnumpy().transpose((1, 0))
                 original_shape = weight.shape
 
                 channel_first_list = self.trace_shape(source_node, IR_node)
@@ -419,7 +426,10 @@ class MXNetParser(Parser):
                 self.set_weight(source_node.name, "weights", weight)
 
             if IR_node.attr["use_bias"].b:
-                self.set_weight(source_node.name, "bias", self.weight_data.get(source_node.name + "_bias").asnumpy())
+                bias_name = source_node.name + "_bias"
+                # if source_node.name == "dense0_fwd":
+                #     bias_name="dense0_bias"
+                self.set_weight(source_node.name, "bias", self.weight_data.get(bias_name).asnumpy())
 
         if not self.data_format == 'NM':
             # print("Warning: Layer [{}] has changed model data format from [{}] to [NM]".format(source_node.name, self.data_format))

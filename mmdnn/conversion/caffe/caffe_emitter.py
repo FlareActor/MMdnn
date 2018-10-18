@@ -359,6 +359,9 @@ bias_term={}, ntop=1)".format(
 
     def emit_Scale(self, IR_node):
 
+        # if IR_node.name == "mulscalar0" or IR_node.name == "minusscalar0":
+        #     return
+
         self.add_body(1, "n.{:<15} = L.Scale(n.{}, bias_term={}, in_place=True, ntop=1)".format(
             IR_node.variable_name,
             self.parent_variable_name(IR_node),
