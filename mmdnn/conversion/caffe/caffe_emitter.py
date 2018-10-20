@@ -408,13 +408,22 @@ bias_term={}, ntop=1)".format(
 
     def emit_Concat(self, IR_node):
         axis_array = (2, 3, 1, 0)
-        axis = axis_array.index(IR_node.get_attr('axis'))
+        old_axis = IR_node.get_attr('axis')
+        axis = axis_array.index(old_axis) if old_axis != -1 else 1
         input_layers = ', '.join(('n.' + self.IR_graph.get_node(edge).real_variable_name) for edge in IR_node.in_edges)
         self.add_body(1, "n.{:<15} = L.Concat({}, axis={})".format(
             IR_node.variable_name,
             input_layers,
             axis
         ))
+
+    # def emit_Transpose(self, IR_node):
+    #     perm = IR_node.get_attr('perm')
+    #     self.add_body(1, "n.{:<15} = L.Python(n.{}, python_param=dict(module='CustomLayers', layer='Transpose'))".format(
+    #         IR_node.variable_name,
+    #         self.parent_variable_name(IR_node),
+    #         # perm
+    #     ))
 
     # def emit_Tanh(self, IR_node):
     #     self._emit_activation(IR_node, 'ops.tanh')
@@ -504,6 +513,10 @@ bias_term={}, ntop=1)".format(
             IR_node.variable_name,
             self.parent_variable_name(IR_node),
         ))
+        # self.add_body(1, "n.{:<15} = n.{}".format(
+        #     IR_node.variable_name,
+        #     self.parent_variable_name(IR_node),
+        # ))
 
     def emit_Slice(self, IR_node):
         """Convert tf.strided_slice to caffe.Slice"""
