@@ -6,10 +6,41 @@ TEST_ONNX = os.environ.get('TEST_ONNX')
 import sys
 import imp
 import numpy as np
-
 from mmdnn.conversion.examples.imagenet_test import TestKit
 import utils
 from utils import *
+
+
+def is_paddle_supported():
+    if (sys.version_info > (2, 7)):
+        print('PaddlePaddle does not support Python {0}'.format(sys.version), file=sys.stderr)
+        return False
+
+    return True
+
+
+def is_coreml_supported():
+    import sys
+    if sys.platform == 'darwin':
+        import platform
+        ver_str = platform.mac_ver()[0]
+        if (tuple([int(v) for v in ver_str.split('.')]) >= (10, 13)):
+            return True
+
+    print('CoreML is not supported on your platform.', file=sys.stderr)
+    return False
+
+
+def check_env(source_framework, target_framework, model_name):
+    if ((source_framework == 'paddle') or (target_framework == 'paddle')):
+        if not is_paddle_supported():
+            return False
+
+    if ((source_framework == 'coreml') or (target_framework == 'coreml')):
+        if not is_coreml_supported():
+            return False
+
+    return True
 
 
 class TestModels(CorrectnessTest):
@@ -28,12 +59,12 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def TensorFlowParse(architecture_name, test_input_path):
+    def tensorflow_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.tensorflow.extractor import tensorflow_extractor
         from mmdnn.conversion.tensorflow.tensorflow_parser import TensorflowParser
 
         # get original model prediction result
-        original_predict = tensorflow_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = tensorflow_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path)
         del tensorflow_extractor
 
         # original to IR
@@ -50,12 +81,12 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def TensorFlowFrozenParse(architecture_name, test_input_path):
+    def tensorflow_frozen_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.tensorflow.extractor import tensorflow_extractor
         from mmdnn.conversion.tensorflow.tensorflow_frozenparser import TensorflowParser2
 
         # get original model prediction result
-        original_predict = tensorflow_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path(architecture_name), is_frozen = True)
+        original_predict = tensorflow_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path, is_frozen = True)
         para = tensorflow_extractor.get_frozen_para(architecture_name)
         del tensorflow_extractor
 
@@ -71,7 +102,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def KerasParse(architecture_name, test_input_path):
+    def keras_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.keras.extractor import keras_extractor
         from mmdnn.conversion.keras.keras2_parser import Keras2Parser
 
@@ -79,7 +110,7 @@ class TestModels(CorrectnessTest):
         model_filename = keras_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = keras_extractor.inference(architecture_name, model_filename, TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = keras_extractor.inference(architecture_name, model_filename, TestModels.cachedir, test_input_path)
         # print(original_predict)
         del keras_extractor
 
@@ -93,7 +124,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def MXNetParse(architecture_name, test_input_path):
+    def mxnet_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.mxnet.extractor import mxnet_extractor
         from mmdnn.conversion.mxnet.mxnet_parser import MXNetParser
 
@@ -101,7 +132,7 @@ class TestModels(CorrectnessTest):
         architecture_file, weight_file = mxnet_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = mxnet_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = mxnet_extractor.inference(architecture_name, None, TestModels.cachedir, test_input_path)
         del mxnet_extractor
 
         # original to IR
@@ -121,14 +152,14 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CaffeParse(architecture_name, test_input_path):
+    def caffe_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.caffe.extractor import caffe_extractor
 
         # download model
         architecture_file, weight_file = caffe_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = caffe_extractor.inference(architecture_name, (architecture_file, weight_file), TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = caffe_extractor.inference(architecture_name, (architecture_file, weight_file), TestModels.cachedir, test_input_path)
         del caffe_extractor
 
         # original to IR
@@ -160,14 +191,14 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CntkParse(architecture_name, test_input_path):
+    def cntk_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.cntk.extractor import cntk_extractor
         from mmdnn.conversion.cntk.cntk_parser import CntkParser
         # download model
         architecture_file = cntk_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = cntk_extractor.inference(architecture_name, architecture_file, test_input_path(architecture_name))
+        original_predict = cntk_extractor.inference(architecture_name, architecture_file, test_input_path)
         del cntk_extractor
 
         # original to IR
@@ -180,7 +211,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CoremlParse(architecture_name, test_input_path):
+    def coreml_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.coreml.extractor import coreml_extractor
         from mmdnn.conversion.coreml.coreml_parser import CoremlParser
 
@@ -188,7 +219,7 @@ class TestModels(CorrectnessTest):
         architecture_file = coreml_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = coreml_extractor.inference(architecture_name, architecture_file, test_input_path(architecture_name))
+        original_predict = coreml_extractor.inference(architecture_name, architecture_file, test_input_path)
         del coreml_extractor
 
          # original to IR
@@ -200,7 +231,7 @@ class TestModels(CorrectnessTest):
         return original_predict
 
     @staticmethod
-    def PaddleParse(architecture_name, test_input_path):
+    def paddle_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.paddle.extractor import paddle_extractor
         from mmdnn.conversion.paddle.paddle_parser import PaddleParser
 
@@ -208,7 +239,7 @@ class TestModels(CorrectnessTest):
         model_filename = paddle_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = paddle_extractor.inference(architecture_name, model_filename, TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = paddle_extractor.inference(architecture_name, model_filename, TestModels.cachedir, test_input_path)
         del paddle_extractor
 
         # original to IR
@@ -221,7 +252,7 @@ class TestModels(CorrectnessTest):
         return original_predict
 
     @staticmethod
-    def PytorchParse(architecture_name, test_input_path):
+    def pytorch_parse(architecture_name, test_input_path):
         from mmdnn.conversion.examples.pytorch.extractor import pytorch_extractor
         from mmdnn.conversion.pytorch.pytorch_parser import PytorchParser
 
@@ -230,7 +261,7 @@ class TestModels(CorrectnessTest):
 
 
         # get original model prediction result
-        original_predict = pytorch_extractor.inference(architecture_name, architecture_file, test_input_path(architecture_name))
+        original_predict = pytorch_extractor.inference(architecture_name, architecture_file, test_input_path)
         del pytorch_extractor
 
         # get shape
@@ -261,7 +292,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def DarknetParse(architecture_name, test_input_path):
+    def darknet_parse(architecture_name, test_input_path):
         ensure_dir("./data/")
         from mmdnn.conversion.examples.darknet.extractor import darknet_extractor
         from mmdnn.conversion.darknet.darknet_parser import DarknetParser
@@ -269,7 +300,7 @@ class TestModels(CorrectnessTest):
         architecture_file = darknet_extractor.download(architecture_name, TestModels.cachedir)
 
         # get original model prediction result
-        original_predict = darknet_extractor.inference(architecture_name, architecture_file, TestModels.cachedir, test_input_path(architecture_name))
+        original_predict = darknet_extractor.inference(architecture_name, architecture_file, TestModels.cachedir, test_input_path)
         del darknet_extractor
 
         # original to IR
@@ -288,11 +319,11 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CntkEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def cntk_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         from mmdnn.conversion.cntk.cntk_emitter import CntkEmitter
 
         # IR to code
-        converted_file = original_framework + '_cntk_' + architecture_name + "_converted"
+        converted_file = TestModels.tmpdir + original_framework + '_cntk_' + architecture_name + "_converted"
         converted_file = converted_file.replace('.', '_')
         emitter = CntkEmitter((architecture_path, weight_path))
         emitter.run(converted_file + '.py', None, 'test')
@@ -303,10 +334,10 @@ class TestModels(CorrectnessTest):
 
         if 'rnn' not in architecture_name:
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             input_data = img
         else:
-            sentence = np.load(test_input_path(architecture_name))
+            sentence = np.load(test_input_path)
             from keras.utils import to_categorical
             input_data = to_categorical(sentence, 30000)[0]
 
@@ -321,11 +352,11 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def TensorflowEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def tensorflow_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         import tensorflow as tf
         from mmdnn.conversion.tensorflow.tensorflow_emitter import TensorflowEmitter
         # IR to code
-        converted_file = original_framework + '_tensorflow_' + architecture_name + "_converted"
+        converted_file = TestModels.tmpdir + original_framework + '_tensorflow_' + architecture_name + "_converted"
         converted_file = converted_file.replace('.', '_')
 
         emitter = TensorflowEmitter((architecture_path, weight_path))
@@ -342,10 +373,10 @@ class TestModels(CorrectnessTest):
 
         if 'rnn' not in architecture_name:
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             input_data = np.expand_dims(img, 0)
         else:
-            input_data = np.load(test_input_path(architecture_name))
+            input_data = np.load(test_input_path)
 
         with tf.Session() as sess:
             init = tf.global_variables_initializer()
@@ -362,11 +393,11 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def PytorchEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def pytorch_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         from mmdnn.conversion.pytorch.pytorch_emitter import PytorchEmitter
 
         # IR to code
-        converted_file = original_framework + '_pytorch_' + architecture_name + "_converted"
+        converted_file = TestModels.tmpdir + original_framework + '_pytorch_' + architecture_name + "_converted"
         converted_file = converted_file.replace('.', '_')
         emitter = PytorchEmitter((architecture_path, weight_path))
         emitter.run(converted_file + '.py', converted_file + '.npy', 'test')
@@ -382,13 +413,13 @@ class TestModels(CorrectnessTest):
         original_framework = checkfrozen(original_framework)
         if 'rnn' not in architecture_name:
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             img = np.transpose(img, (2, 0, 1))
             img = np.expand_dims(img, 0).copy()
             input_data = torch.from_numpy(img)
             input_data = torch.autograd.Variable(input_data, requires_grad = False)
         else:
-            sentence = np.load(test_input_path(architecture_name))
+            sentence = np.load(test_input_path)
             input_data = torch.from_numpy(sentence)
             input_data = torch.autograd.Variable(input_data, requires_grad = False)
 
@@ -406,11 +437,11 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def KerasEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def keras_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         from mmdnn.conversion.keras.keras2_emitter import Keras2Emitter
 
         # IR to code
-        converted_file = original_framework + '_keras_' + architecture_name + "_converted"
+        converted_file = TestModels.tmpdir + original_framework + '_keras_' + architecture_name + "_converted"
         converted_file = converted_file.replace('.', '_')
         emitter = Keras2Emitter((architecture_path, weight_path))
         emitter.run(converted_file + '.py', None, 'test')
@@ -424,10 +455,10 @@ class TestModels(CorrectnessTest):
         original_framework = checkfrozen(original_framework)
         if 'rnn' not in architecture_name:
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             input_data = np.expand_dims(img, 0)
         else:
-            input_data = np.load(test_input_path(architecture_name))
+            input_data = np.load(test_input_path)
 
         predict = model_converted.predict(input_data)
 
@@ -448,7 +479,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def MXNetEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def mxnet_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         from mmdnn.conversion.mxnet.mxnet_emitter import MXNetEmitter
         from collections import namedtuple
         Batch = namedtuple('Batch', ['data'])
@@ -456,7 +487,7 @@ class TestModels(CorrectnessTest):
         import mxnet
 
         # IR to code
-        converted_file = original_framework + '_mxnet_' + architecture_name + "_converted"
+        converted_file = TestModels.tmpdir + original_framework + '_mxnet_' + architecture_name + "_converted"
         converted_file = converted_file.replace('.', '_')
         output_weights_file = converted_file + "-0000.params"
         emitter = MXNetEmitter((architecture_path, weight_path, output_weights_file))
@@ -473,11 +504,11 @@ class TestModels(CorrectnessTest):
         original_framework = checkfrozen(original_framework)
         if 'rnn' not in architecture_name:
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             img = np.transpose(img, (2, 0, 1))
             input_data = np.expand_dims(img, 0)
         else:
-            input_data = np.load(test_input_path(architecture_name))
+            input_data = np.load(test_input_path)
 
         model_converted.forward(Batch([mxnet.nd.array(input_data)]))
         predict = model_converted.get_outputs()[0].asnumpy()
@@ -494,13 +525,13 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CaffeEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def caffe_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         try:
             import caffe
             from mmdnn.conversion.caffe.caffe_emitter import CaffeEmitter
 
             # IR to code
-            converted_file = original_framework + '_caffe_' + architecture_name + "_converted"
+            converted_file = TestModels.tmpdir + original_framework + '_caffe_' + architecture_name + "_converted"
             converted_file = converted_file.replace('.', '_')
             emitter = CaffeEmitter((architecture_path, weight_path))
             emitter.run(converted_file + '.py', converted_file + '.npy', 'test')
@@ -516,12 +547,12 @@ class TestModels(CorrectnessTest):
 
             original_framework = checkfrozen(original_framework)
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             img = np.transpose(img, [2, 0, 1])
             input_data = np.expand_dims(img, 0)
 
-            model_converted.blobs[model_converted._layer_names[0]].data[...] = input_data
-            predict = model_converted.forward()[model_converted._layer_names[-1]]
+            model_converted.blobs[model_converted.inputs[0]].data[...] = input_data
+            predict = model_converted.forward()[model_converted.outputs[-1]]
             converted_predict = np.squeeze(predict)
 
             del model_converted
@@ -540,7 +571,7 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def CoreMLEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def coreml_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         from mmdnn.conversion.coreml.coreml_emitter import CoreMLEmitter
         from coremltools.models import MLModel
         import coremltools
@@ -594,7 +625,7 @@ class TestModels(CorrectnessTest):
         model, input_name, output_name = emitter.gen_model(
                 input_names=None,
                 output_names=None,
-                image_input_names=test_input_path(architecture_name),
+                image_input_names=test_input_path,
                 is_bgr=BGRTranspose,
                 red_bias=prep_list[1],
                 green_bias=prep_list[2],
@@ -616,9 +647,7 @@ class TestModels(CorrectnessTest):
         # save model
         # coremltools.utils.save_spec(model.get_spec(), converted_file)
 
-        from coremltools.models.utils import macos_version
-
-        if macos_version() < (10, 13):
+        if not is_coreml_supported():
             return None
         else:
 
@@ -637,12 +666,12 @@ class TestModels(CorrectnessTest):
 
 
     @staticmethod
-    def OnnxEmit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
+    def onnx_emit(original_framework, architecture_name, architecture_path, weight_path, test_input_path):
         try:
             from mmdnn.conversion.onnx.onnx_emitter import OnnxEmitter
 
             # IR to code
-            converted_file = original_framework + '_onnx_' + architecture_name + "_converted"
+            converted_file = TestModels.tmpdir + original_framework + '_onnx_' + architecture_name + "_converted"
             converted_file = converted_file.replace('.', '_')
             emitter = OnnxEmitter(architecture_path, weight_path)
             emitter.run(converted_file + '.py', converted_file + '.npy', 'test')
@@ -657,17 +686,11 @@ class TestModels(CorrectnessTest):
 
             original_framework = checkfrozen(original_framework)
             func = TestKit.preprocess_func[original_framework][architecture_name]
-            img = func(test_input_path(architecture_name))
+            img = func(test_input_path)
             input_data = np.expand_dims(img, 0)
 
             predict = tf_rep.run(input_data)[0]
 
-            return predict
-
-        except ImportError:
-            print('Please install Onnx! Or Onnx is not supported in your platform.', file=sys.stderr)
-
-        finally:
             del prepare
             del model_converted
             del tf_rep
@@ -676,109 +699,113 @@ class TestModels(CorrectnessTest):
             os.remove(converted_file + '.py')
             os.remove(converted_file + '.npy')
 
+            return predict
+
+        except ImportError:
+            print('Please install Onnx! Or Onnx is not supported in your platform.', file=sys.stderr)
 
 
     # In case of odd number add the extra padding at the end for SAME_UPPER(eg. pads:[0, 2, 2, 0, 0, 3, 3, 0]) and at the beginning for SAME_LOWER(eg. pads:[0, 3, 3, 0, 0, 2, 2, 0])
 
     exception_tabel = {
-        'cntk_Keras_resnet18',                      # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
-        'cntk_Keras_resnet152',                     # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
-        'cntk_Tensorflow_resnet18',                 # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
-        'cntk_Tensorflow_resnet152',                # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_inception_v1',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_resnet_v1_50',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_resnet_v2_50',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_resnet_v1_152',            # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_resnet_v2_152',            # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_mobilenet_v1_1.0',         # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Cntk_mobilenet_v2_1.0_224',     # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
-        'tensorflow_Caffe_mobilenet_v1_1.0',        # Caffe No Relu6
-        'tensorflow_Caffe_mobilenet_v2_1.0_224',    # Caffe No Relu6
-        'tensorflow_frozen_MXNet_inception_v1',     # different after AvgPool. AVG POOL padding difference between these two framework. MXNet AVGPooling Padding is SAME_LOWER, Tensorflow AVGPooling Padding is SAME_UPPER
-        'tensorflow_MXNet_inception_v3',            # different after "InceptionV3/InceptionV3/Mixed_5b/Branch_3/AvgPool_0a_3x3/AvgPool". AVG POOL padding difference between these two framework.
-        'darknet_Keras_yolov2',                     # accumulation of small difference
-        'darknet_Keras_yolov3',                     # accumulation of small difference
+        'cntk_keras_resnet18',                      # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
+        'cntk_keras_resnet152',                     # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
+        'cntk_tensorflow_resnet18',                 # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
+        'cntk_tensorflow_resnet152',                # Cntk Padding is SAME_LOWER, but Keras Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_inception_v1',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_resnet_v1_50',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_resnet_v2_50',             # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_resnet_v1_152',            # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_resnet_v2_152',            # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_mobilenet_v1_1.0',         # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_cntk_mobilenet_v2_1.0_224',     # Cntk Padding is SAME_LOWER, but Tensorflow Padding is SAME_UPPER, in first convolution layer.
+        'tensorflow_caffe_mobilenet_v1_1.0',        # Caffe No Relu6
+        'tensorflow_caffe_mobilenet_v2_1.0_224',    # Caffe No Relu6
+        'tensorflow_frozen_mxnet_inception_v1',     # different after AvgPool. AVG POOL padding difference between these two framework. MXNet AVGPooling Padding is SAME_LOWER, Tensorflow AVGPooling Padding is SAME_UPPER
+        'tensorflow_mxnet_inception_v3',            # different after "InceptionV3/InceptionV3/Mixed_5b/Branch_3/AvgPool_0a_3x3/AvgPool". AVG POOL padding difference between these two framework.
+        'darknet_keras_yolov2',                     # accumulation of small difference
+        'darknet_keras_yolov3',                     # accumulation of small difference
     }
 
     if TEST_ONNX and TEST_ONNX.lower() == 'true':
         test_table = {
             'cntk' : {
-                'inception_v3'  : [OnnxEmit],
-                'resnet18'      : [OnnxEmit],
-                'resnet152'     : [OnnxEmit],
+                'inception_v3'  : [onnx_emit],
+                'resnet18'      : [onnx_emit],
+                'resnet152'     : [onnx_emit],
             },
 
             'keras' : {
-                'vgg16'        : [OnnxEmit],
-                'vgg19'        : [OnnxEmit],
-                'inception_v3' : [OnnxEmit],
-                'resnet50'     : [OnnxEmit],
-                'densenet'     : [OnnxEmit],
-                # 'xception'     : [OnnxEmit],
-                'mobilenet'    : [OnnxEmit],
-                # 'nasnet'       : [OnnxEmit],
-                'yolo2'        : [OnnxEmit],
+                'vgg16'        : [onnx_emit],
+                'vgg19'        : [onnx_emit],
+                'inception_v3' : [onnx_emit],
+                'resnet50'     : [onnx_emit],
+                'densenet'     : [onnx_emit],
+                # 'xception'     : [onnx_emit],
+                'mobilenet'    : [onnx_emit],
+                # 'nasnet'       : [onnx_emit],
+                'yolo2'        : [onnx_emit],
             },
 
             'mxnet' : {
-                'vgg19'                        : [OnnxEmit],
-                'imagenet1k-inception-bn'      : [OnnxEmit],
-                'imagenet1k-resnet-18'         : [OnnxEmit],
-                'imagenet1k-resnet-152'        : [OnnxEmit],
-                'squeezenet_v1.1'              : [OnnxEmit],
-                'imagenet1k-resnext-101-64x4d' : [OnnxEmit],
-                'imagenet1k-resnext-50'        : [OnnxEmit],
+                'vgg19'                        : [onnx_emit],
+                'imagenet1k-inception-bn'      : [onnx_emit],
+                'imagenet1k-resnet-18'         : [onnx_emit],
+                'imagenet1k-resnet-152'        : [onnx_emit],
+                'squeezenet_v1.1'              : [onnx_emit],
+                'imagenet1k-resnext-101-64x4d' : [onnx_emit],
+                'imagenet1k-resnext-50'        : [onnx_emit],
             },
 
             'caffe' : {
-                'alexnet'       : [OnnxEmit],
-                'inception_v1'  : [OnnxEmit],
-                'inception_v4'  : [OnnxEmit],
-                'resnet152'     : [OnnxEmit],
-                'squeezenet'    : [OnnxEmit],
-                'vgg19'         : [OnnxEmit],
-                # 'voc-fcn8s'     : [OnnxEmit], # TODO: ConvTranspose, Crop
-                # 'voc-fcn16s'    : [OnnxEmit], # TODO: ConvTranspose, Crop
-                # 'voc-fcn32s'    : [OnnxEmit], # TODO: ConvTranspose, Crop
-                'xception'      : [OnnxEmit],
+                'alexnet'       : [onnx_emit],
+                'inception_v1'  : [onnx_emit],
+                'inception_v4'  : [onnx_emit],
+                'resnet152'     : [onnx_emit],
+                'squeezenet'    : [onnx_emit],
+                'vgg19'         : [onnx_emit],
+                # 'voc-fcn8s'     : [onnx_emit], # TODO: ConvTranspose, Crop
+                # 'voc-fcn16s'    : [onnx_emit], # TODO: ConvTranspose, Crop
+                # 'voc-fcn32s'    : [onnx_emit], # TODO: ConvTranspose, Crop
+                'xception'      : [onnx_emit],
             },
 
             'tensorflow' : {
-                'facenet'               : [OnnxEmit],
-                'vgg19'                 : [OnnxEmit],
-                'inception_v1'          : [OnnxEmit],
-                'inception_v3'          : [OnnxEmit],
-                # 'resnet_v1_50'          : [OnnxEmit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
-                # 'resnet_v1_152'         : [OnnxEmit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
-                # 'resnet_v2_50'          : [OnnxEmit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
-                # 'resnet_v2_152'         : [OnnxEmit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
-                'mobilenet_v1_1.0'      : [OnnxEmit],
-                'mobilenet_v2_1.0_224'  : [OnnxEmit],
-                # 'nasnet-a_large'        : [OnnxEmit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
-                'inception_resnet_v2'   : [OnnxEmit],
+                'facenet'               : [onnx_emit],
+                'vgg19'                 : [onnx_emit],
+                'inception_v1'          : [onnx_emit],
+                'inception_v3'          : [onnx_emit],
+                # 'resnet_v1_50'          : [onnx_emit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
+                # 'resnet_v1_152'         : [onnx_emit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
+                # 'resnet_v2_50'          : [onnx_emit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
+                # 'resnet_v2_152'         : [onnx_emit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
+                'mobilenet_v1_1.0'      : [onnx_emit],
+                'mobilenet_v2_1.0_224'  : [onnx_emit],
+                # 'nasnet-a_large'        : [onnx_emit], # POOL: strides > window_shape not supported due to inconsistency between CPU and GPU implementations
+                'inception_resnet_v2'   : [onnx_emit],
             },
 
             'tensorflow_frozen' : {
-                'inception_v1'      : [OnnxEmit],
-                'inception_v3'      : [OnnxEmit],
-                'mobilenet_v1_1.0'  : [OnnxEmit],
-                'facenet'           : [OnnxEmit],
+                'inception_v1'      : [onnx_emit],
+                'inception_v3'      : [onnx_emit],
+                'mobilenet_v1_1.0'  : [onnx_emit],
+                'facenet'           : [onnx_emit],
             },
 
             'coreml' : {
-                'inception_v3' : [OnnxEmit],
-                'mobilenet'    : [OnnxEmit],
-                'resnet50'     : [OnnxEmit],
-                'tinyyolo'     : [OnnxEmit],
-                'vgg16'        : [OnnxEmit],
+                'inception_v3' : [onnx_emit],
+                'mobilenet'    : [onnx_emit],
+                'resnet50'     : [onnx_emit],
+                'tinyyolo'     : [onnx_emit],
+                'vgg16'        : [onnx_emit],
             },
 
             'darknet' : {
             },
 
             'paddle'  : {
-                'resnet50'     : [OnnxEmit],
-                'vgg16'        : [OnnxEmit],      # First 1000 exactly the same, the last one is different
+                'resnet50'     : [onnx_emit],
+                'vgg16'        : [onnx_emit],      # First 1000 exactly the same, the last one is different
             },
 
             'pytorch' : {
@@ -791,98 +818,104 @@ class TestModels(CorrectnessTest):
     else:
         test_table = {
             'cntk' : {
-                # 'alexnet'       : [CntkEmit, KerasEmit, TensorflowEmit],
-                'inception_v3'  : [CntkEmit, PytorchEmit, TensorflowEmit], #TODO: Caffe, Keras, and MXNet no constant layer
-                'resnet18'      : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'resnet152'     : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
+                # 'alexnet'       : [cntk_emit, keras_emit, tensorflow_emit],
+                'inception_v3'  : [cntk_emit, pytorch_emit, tensorflow_emit], #TODO: Caffe, Keras, and MXNet no constant layer
+                'resnet18'      : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'resnet152'     : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
             },
 
             'keras' : {
-                'vgg19'        : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'inception_v3' : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'resnet50'     : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'densenet'     : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'xception'     : [TensorflowEmit, KerasEmit, CoreMLEmit],
-                'mobilenet'    : [CoreMLEmit, KerasEmit, TensorflowEmit], # TODO: MXNetEmit
-                # 'nasnet'       : [TensorflowEmit, KerasEmit, CoreMLEmit],
-                'yolo2'        : [KerasEmit],
-                # 'facenet'      : [TensorflowEmit, CoreMLEmit,MXNetEmit,KerasEmit]  # TODO:
-
+                'vgg19'        : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'inception_v3' : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'resnet50'     : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'densenet'     : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'xception'     : [tensorflow_emit, keras_emit, coreml_emit],
+                'mobilenet'    : [coreml_emit, keras_emit, tensorflow_emit], # TODO: mxnet_emit
+                # 'nasnet'       : [tensorflow_emit, keras_emit, coreml_emit],
+                'yolo2'        : [keras_emit],
+                # 'facenet'      : [tensorflow_emit, coreml_emit,mxnet_emit,keras_emit]  # TODO
             },
 
             'mxnet' : {
-                'vgg19'                        : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'imagenet1k-inception-bn'      : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'imagenet1k-resnet-18'         : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'imagenet1k-resnet-152'        : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'squeezenet_v1.1'              : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'imagenet1k-resnext-101-64x4d' : [CaffeEmit, CntkEmit, CoreMLEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # Keras is ok but too slow
-                'imagenet1k-resnext-50'        : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
+                'vgg19'                        : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'imagenet1k-inception-bn'      : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'imagenet1k-resnet-18'         : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'imagenet1k-resnet-152'        : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'squeezenet_v1.1'              : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'imagenet1k-resnext-101-64x4d' : [caffe_emit, cntk_emit, coreml_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # Keras is ok but too slow
+                'imagenet1k-resnext-50'        : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
             },
 
             'caffe' : {
-                'alexnet'       : [CaffeEmit, CntkEmit, CoreMLEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # TODO: KerasEmit('Tensor' object has no attribute '_keras_history')
-                'inception_v1'  : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'inception_v4'  : [CntkEmit, CoreMLEmit, KerasEmit, PytorchEmit, TensorflowEmit], # TODO MXNetEmit(Small error), CaffeEmit(Crash for shape)
-                'resnet152'     : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'squeezenet'    : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'vgg19'         : [CaffeEmit, CntkEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'voc-fcn8s'     : [CntkEmit, CoreMLEmit, TensorflowEmit],
-                'voc-fcn16s'    : [CntkEmit, CoreMLEmit, TensorflowEmit],
-                'voc-fcn32s'    : [CntkEmit, CoreMLEmit, TensorflowEmit],
-                'xception'      : [CoreMLEmit, CntkEmit, MXNetEmit, PytorchEmit, TensorflowEmit], #  TODO: Caffe(Crash) KerasEmit(too slow)
+                'alexnet'       : [caffe_emit, cntk_emit, coreml_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # TODO: keras_emit('Tensor' object has no attribute '_keras_history')
+                'inception_v1'  : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'inception_v4'  : [cntk_emit, coreml_emit, keras_emit, pytorch_emit, tensorflow_emit], # TODO mxnet_emit(Small error), caffe_emit(Crash for shape)
+                'resnet152'     : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'squeezenet'    : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'vgg19'         : [caffe_emit, cntk_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'voc-fcn8s'     : [cntk_emit, coreml_emit, tensorflow_emit],
+                'voc-fcn16s'    : [cntk_emit, coreml_emit, tensorflow_emit],
+                'voc-fcn32s'    : [cntk_emit, coreml_emit, tensorflow_emit],
+                'xception'      : [coreml_emit, cntk_emit, mxnet_emit, pytorch_emit, tensorflow_emit], #  TODO: Caffe(Crash) keras_emit(too slow)
             },
 
             'tensorflow' : {
-                'vgg19'                 : [CaffeEmit, CoreMLEmit, CntkEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'inception_v1'          : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # TODO: CntkEmit
-                'inception_v3'          : [CaffeEmit, CoreMLEmit, CntkEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'resnet_v1_152'         : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # TODO: CntkEmit
-                'resnet_v2_152'         : [CaffeEmit, CoreMLEmit, CntkEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'mobilenet_v1_1.0'      : [CaffeEmit, CoreMLEmit, CntkEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'mobilenet_v2_1.0_224'  : [CaffeEmit, CoreMLEmit, CntkEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'nasnet-a_large'        : [MXNetEmit, PytorchEmit, TensorflowEmit], # TODO: KerasEmit(Slice Layer: https://blog.csdn.net/lujiandong1/article/details/54936185)
-                'inception_resnet_v2'   : [CaffeEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit], #  CoremlEmit worked once, then always
-                'facenet'               : [MXNetEmit, TensorflowEmit, KerasEmit, PytorchEmit, CaffeEmit], # TODO: CoreMLEmit
-                'rnn_embedding'         : [TensorflowEmit, KerasEmit, PytorchEmit, MXNetEmit, CntkEmit] 
+                'vgg19'                 : [caffe_emit, coreml_emit, cntk_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'inception_v1'          : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # TODO: cntk_emit
+                'inception_v3'          : [caffe_emit, coreml_emit, cntk_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'resnet_v1_152'         : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # TODO: cntk_emit
+                'resnet_v2_152'         : [caffe_emit, coreml_emit, cntk_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'mobilenet_v1_1.0'      : [caffe_emit, coreml_emit, cntk_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'mobilenet_v2_1.0_224'  : [caffe_emit, coreml_emit, cntk_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'nasnet-a_large'        : [mxnet_emit, pytorch_emit, tensorflow_emit], # TODO: keras_emit(Slice Layer: https://blog.csdn.net/lujiandong1/article/details/54936185)
+                'inception_resnet_v2'   : [caffe_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit], #  CoremlEmit worked once, then always
+                'facenet'               : [mxnet_emit, tensorflow_emit, keras_emit, pytorch_emit, caffe_emit], # TODO: coreml_emit
+                'rnn_lstm_gru_stacked'  : [tensorflow_emit, keras_emit, pytorch_emit, mxnet_emit] #TODO cntk_emit
             },
 
             'tensorflow_frozen' : {
-                'inception_v1'      : [TensorflowEmit, KerasEmit, MXNetEmit, CoreMLEmit], # TODO: CntkEmit
-                'inception_v3'      : [TensorflowEmit, KerasEmit, MXNetEmit, CoreMLEmit], # TODO: CntkEmit
-                'mobilenet_v1_1.0'  : [TensorflowEmit, KerasEmit, MXNetEmit, CoreMLEmit],
-                'facenet'           : [MXNetEmit, TensorflowEmit, KerasEmit] # TODO: CoreMLEmit
+                'inception_v1'      : [tensorflow_emit, keras_emit, mxnet_emit, coreml_emit], # TODO: cntk_emit
+                'inception_v3'      : [tensorflow_emit, keras_emit, mxnet_emit, coreml_emit], # TODO: cntk_emit
+                'mobilenet_v1_1.0'  : [tensorflow_emit, keras_emit, mxnet_emit, coreml_emit],
+                'facenet'           : [mxnet_emit, tensorflow_emit, keras_emit, caffe_emit] # TODO: coreml_emit
             },
 
             'coreml' : {
-                'inception_v3' : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'mobilenet'    : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'resnet50'     : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'tinyyolo'     : [CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'vgg16'        : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
+                'inception_v3' : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'mobilenet'    : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'resnet50'     : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                # 'tinyyolo'     : [coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'vgg16'        : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
             },
 
             'darknet' : {
-                'yolov2': [KerasEmit],
-                'yolov3': [KerasEmit],
+                'yolov2': [keras_emit],
+                'yolov3': [keras_emit],
             },
 
             'paddle' : {
-                'resnet50': [CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # CaffeEmit crash, due to gflags_reporting.cc
-                'resnet101': [CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit], # CaffeEmit crash
-                # 'vgg16': [TensorflowEmit],
-                # 'alexnet': [TensorflowEmit]
+                'resnet50': [coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # caffe_emit crash, due to gflags_reporting.cc
+                'resnet101': [coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit], # caffe_emit crash
+                # 'vgg16': [tensorflow_emit],
+                # 'alexnet': [tensorflow_emit]
             },
 
             'pytorch' : {
-                'alexnet'     : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'densenet201' : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'inception_v3': [CaffeEmit, CoreMLEmit, KerasEmit, PytorchEmit, TensorflowEmit],  # Mxnet broken https://github.com/apache/incubator-mxnet/issues/10194
-                'vgg19'       : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'vgg19_bn'    : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
-                'resnet152'   : [CaffeEmit, CoreMLEmit, KerasEmit, MXNetEmit, PytorchEmit, TensorflowEmit],
+                'alexnet'     : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'densenet201' : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'inception_v3': [caffe_emit, coreml_emit, keras_emit, pytorch_emit, tensorflow_emit],  # Mxnet broken https://github.com/apache/incubator-mxnet/issues/10194
+                'vgg19'       : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'vgg19_bn'    : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
+                'resnet152'   : [caffe_emit, coreml_emit, keras_emit, mxnet_emit, pytorch_emit, tensorflow_emit],
             }
         }
+
+
+    def _get_test_input(self, architecture_name):
+        if 'rnn' in architecture_name:
+            return self.sentence_path
+        else:
+            return self.image_path
 
 
     @classmethod
@@ -891,12 +924,11 @@ class TestModels(CorrectnessTest):
         if test_name in cls.exception_tabel:
             return False
 
-        if target_framework == 'CoreML':
-            from coremltools.models.utils import macos_version
-            if macos_version() < (10, 13):
+        if target_framework == 'coreml':
+            if not is_coreml_supported():
                 return False
 
-        if target_framework == 'Onnx' or target_framework == 'Caffe':
+        if target_framework == 'onnx' or target_framework == 'caffe':
             if converted_prediction is None:
                 return False
 
@@ -910,23 +942,29 @@ class TestModels(CorrectnessTest):
         for network_name in self.test_table[original_framework].keys():
             print("Test {} from {} start.".format(network_name, original_framework), file=sys.stderr)
 
+            # get test input path
+            test_input = self._get_test_input(network_name)
+
             # get original model prediction result
-            original_predict = parser(network_name, lambda architecture_name : self.sentence_path 
-            if 'rnn' in architecture_name.lower() else self.image_path)
+            original_predict = parser(network_name, test_input)
 
             IR_file = TestModels.tmpdir + original_framework + '_' + network_name + "_converted"
             for emit in self.test_table[original_framework][network_name]:
                 if isinstance(emit, staticmethod):
                     emit = emit.__func__
-                target_framework = emit.__name__[:-4]
+                target_framework = emit.__name__[:-5]
+
+                if (target_framework == 'coreml'):
+                    if not is_coreml_supported():
+                        continue
+
                 print('Testing {} from {} to {}.'.format(network_name, original_framework, target_framework), file=sys.stderr)
                 converted_predict = emit(
                     original_framework,
                     network_name,
                     IR_file + ".pb",
                     IR_file + ".npy",
-                    lambda architecture_name : self.sentence_path 
-                    if 'rnn' in architecture_name.lower() else self.image_path)
+                    test_input)
 
                 self._compare_outputs(
                     original_framework,
@@ -956,7 +994,7 @@ class TestModels(CorrectnessTest):
     # def test_caffe(self):
     #     try:
     #         import caffe
-    #         self._test_function('caffe', self.CaffeParse)
+    #         self._test_function('caffe', self.caffe_parse)
     #     except ImportError:
     #         print('Please install caffe! Or caffe is not supported in your platform.', file=sys.stderr)
 
@@ -964,7 +1002,7 @@ class TestModels(CorrectnessTest):
     # def test_cntk(self):
     #     try:
     #         import cntk
-    #         self._test_function('cntk', self.CntkParse)
+    #         self._test_function('cntk', self.cntk_parse)
     #     except ImportError:
     #         print('Please install cntk! Or cntk is not supported in your platform.', file=sys.stderr)
 
@@ -974,19 +1012,19 @@ class TestModels(CorrectnessTest):
     #     if macos_version() < (10, 13):
     #         print('Coreml is not supported in your platform.', file=sys.stderr)
     #     else:
-    #         self._test_function('coreml', self.CoremlParse)
+    #         self._test_function('coreml', self.coreml_parse)
 
 
     # def test_keras(self):
-    #     self._test_function('keras', self.KerasParse)
+    #     self._test_function('keras', self.keras_parse)
 
 
     # def test_mxnet(self):
-    #     self._test_function('mxnet', self.MXNetParse)
+    #     self._test_function('mxnet', self.mxnet_parse)
 
 
     # def test_darknet(self):
-    #     self._test_function('darknet', self.DarknetParse)
+    #     self._test_function('darknet', self.darknet_parse)
 
 
     # def test_paddle(self):
@@ -994,18 +1032,18 @@ class TestModels(CorrectnessTest):
     #     import tensorflow as tf
     #     try:
     #         import paddle.v2 as paddle
-    #         self._test_function('paddle', self.PaddleParse)
+    #         self._test_function('paddle', self.paddle_parse)
     #     except ImportError:
     #         print('Please install Paddlepaddle! Or Paddlepaddle is not supported in your platform.', file=sys.stderr)
 
 
     # def test_pytorch(self):
-    #     self._test_function('pytorch', self.PytorchParse)
+    #     self._test_function('pytorch', self.pytorch_parse)
 
 
     # def test_tensorflow(self):
-    #     self._test_function('tensorflow', self.TensorFlowParse)
+    #     self._test_function('tensorflow', self.tensorflow_parse)
 
 
     # def test_tensorflow_frozen(self):
-    #     self._test_function('tensorflow_frozen', self.TensorFlowFrozenParse)
+    #     self._test_function('tensorflow_frozen', self.tensorflow_frozen_parse)

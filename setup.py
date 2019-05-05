@@ -12,7 +12,7 @@ setup(
     # Versions should comply with PEP440.  For a discussion on single-sourcing
     # the version across setup.py and the project code, see
     # https://packaging.python.org/en/latest/single_source_version.html
-    version='0.2.3',
+    version='0.2.4',
 
     description='Deep learning model converter, visualization and editor.',
     long_description=long_description,
@@ -22,8 +22,8 @@ setup(
     url='https://github.com/Microsoft/MMdnn',
 
     # Author details
-    author = 'Cheng CHEN, System Research Group, Microsoft Research Asia',
-    author_email='cncng@microsoft.com',
+    author = 'System Research Group, Microsoft Research Asia',
+    author_email='mmdnn_feedback@microsoft.com',
 
     # Choose your license
     license='MIT',
