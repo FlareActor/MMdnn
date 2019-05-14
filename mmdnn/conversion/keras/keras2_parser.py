@@ -692,6 +692,8 @@ class Keras2Parser(Parser):
 
         IR_node.attr['epsilon'].f = keras_node.layer.epsilon
 
+        IR_node.attr['momentum'].f = keras_node.layer.momentum
+
         if self.weight_loaded:
             # Parameter arrangement in Keras: gamma, beta, mean, variance
             idx = 0
