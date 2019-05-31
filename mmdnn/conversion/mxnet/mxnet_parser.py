@@ -404,7 +404,7 @@ class MXNetParser(Parser):
 
         # weights
         if self.weight_loaded:
-            weight_name = source_node.name + "_weight"
+            weight_name = source_node.name.rstrip('_fwd') + "_weight"
             # if source_node.name == "dense0_fwd":
             #     weight_name = "dense0_weight"
             # elif source_node.name == "pre_fc1":
@@ -426,7 +426,7 @@ class MXNetParser(Parser):
                 self.set_weight(source_node.name, "weights", weight)
 
             if IR_node.attr["use_bias"].b:
-                bias_name = source_node.name + "_bias"
+                bias_name = source_node.name.rstrip('_fwd') + "_bias"
                 # if source_node.name == "dense0_fwd":
                 #     bias_name="dense0_bias"
                 self.set_weight(source_node.name, "bias", self.weight_data.get(bias_name).asnumpy())
@@ -514,7 +514,8 @@ class MXNetParser(Parser):
 
         # weights
         if self.weight_loaded:
-            weight = self.weight_data.get(source_node.name + "_weight").asnumpy()
+            src_node_name = source_node.name.rstrip('_fwd')
+            weight = self.weight_data.get(src_node_name + "_weight").asnumpy()
             if not layout in MXNetParser.channels_last:
                 weight = MXNetParser.transpose(weight, dim)
                 if IR_node.op == "DepthwiseConv":
@@ -522,7 +523,7 @@ class MXNetParser(Parser):
             self.set_weight(source_node.name, "weights", weight)
 
             if IR_node.attr["use_bias"].b:
-                self.set_weight(source_node.name, "bias", self.weight_data.get(source_node.name + "_bias").asnumpy())
+                self.set_weight(source_node.name, "bias", self.weight_data.get(src_node_name + "_bias").asnumpy())
 
 
     def rename_Activation(self, source_node):
@@ -549,19 +550,20 @@ class MXNetParser(Parser):
 
         # weights
         if self.weight_loaded:
+            src_node_name = source_node.name.rstrip('_fwd')
             # gamma
             if IR_node.attr["scale"].b:
-                self.set_weight(source_node.name, "scale", self.weight_data.get(source_node.name + "_gamma").asnumpy())
+                self.set_weight(source_node.name, "scale", self.weight_data.get(src_node_name + "_gamma").asnumpy())
 
             # beta
             if IR_node.attr["bias"].b:
-                self.set_weight(source_node.name, "bias", self.weight_data.get(source_node.name + "_beta").asnumpy())
+                self.set_weight(source_node.name, "bias", self.weight_data.get(src_node_name + "_beta").asnumpy())
 
             # mean
-            self.set_weight(source_node.name, "mean", self.weight_data.get(source_node.name + "_moving_mean").asnumpy())
+            self.set_weight(source_node.name, "mean", self.weight_data.get(src_node_name + "_running_mean").asnumpy())
 
             # var
-            self.set_weight(source_node.name, "var", self.weight_data.get(source_node.name + "_moving_var").asnumpy())
+            self.set_weight(source_node.name, "var", self.weight_data.get(src_node_name + "_running_var").asnumpy())
 
 
     def rename_Pooling(self, source_node):
