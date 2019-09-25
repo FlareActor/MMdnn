@@ -54,9 +54,9 @@ def load_weights(weight_file):
         return
 
     try:
-        weights_dict = np.load(weight_file).item()
+        weights_dict = np.load(weight_file, allow_pickle=True).item()
     except:
-        weights_dict = np.load(weight_file, encoding='bytes').item()
+        weights_dict = np.load(weight_file, allow_pickle=True, encoding='bytes').item()
 
     return weights_dict
 
@@ -199,7 +199,8 @@ if __name__=='__main__':
         num_output = IR_node.get_attr('kernel_shape')[-1]
         if IR_node.type == "DepthwiseConv":
             num_group = IR_node.get_attr("kernel_shape")[-2]
-            num_output = IR_node.get_attr('kernel_shape')[-2]
+            # num_output = IR_node.get_attr('kernel_shape')[-2]
+            num_output = IR_node.get_attr("_output_shapes")[0].dim[3].size
         else:
             num_group = IR_node.get_attr("group", 1)
 
@@ -500,6 +501,15 @@ if __name__=='__main__':
             self.parent_variable_name(IR_node),
             in_place))
 
+
+    def emit_Elu(self, IR_node):
+        in_place = True
+        self.add_body(1, "n.{:<15} = L.ELU(n.{}, in_place={}, ntop=1)".format(
+            IR_node.variable_name,
+            self.parent_variable_name(IR_node),
+            in_place))
+
+
     def emit_LeakyRelu(self, IR_node):
         in_place = True
         self.add_body(1, "n.{:<15} = L.ReLU(n.{}, in_place={}, negative_slope={}, ntop=1)".format(
@@ -651,3 +661,6 @@ if __name__=='__main__':
             IR_node.variable_name,
             self.parent_variable_name(IR_node),
             in_place))
+
+    def emit_SpaceToDepth(self, IR_node):
+        self.add_body(1, "")

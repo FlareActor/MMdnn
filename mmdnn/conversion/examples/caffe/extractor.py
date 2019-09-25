@@ -4,6 +4,7 @@
 #----------------------------------------------------------------------------------------------
 
 from __future__ import absolute_import
+import os
 from mmdnn.conversion.examples.imagenet_test import TestKit
 from mmdnn.conversion.examples.extractor import base_extractor
 from mmdnn.conversion.common.utils import download_file
@@ -43,6 +44,8 @@ class caffe_extractor(base_extractor):
                            'caffemodel' : 'http://dl.caffe.berkeleyvision.org/fcn16s-heavy-pascal.caffemodel'},
         'voc-fcn32s'    : {'prototxt' : MMDNN_BASE_URL + "caffe/voc-fcn32s_deploy.prototxt",
                            'caffemodel' : 'http://dl.caffe.berkeleyvision.org/fcn32s-heavy-pascal.caffemodel'},
+        'trailnet_sresnet': {'prototxt': 'https://raw.githubusercontent.com/NVIDIA-AI-IOT/redtail/master/models/pretrained/TrailNet_SResNet-18.prototxt',
+                            'caffemodel': 'https://raw.githubusercontent.com/NVIDIA-AI-IOT/redtail/master/models/pretrained/TrailNet_SResNet-18.caffemodel'}
     }
 
 
@@ -59,6 +62,7 @@ class caffe_extractor(base_extractor):
             if not weight_file:
                 return None
 
+
             print("Caffe Model {} saved as [{}] and [{}].".format(architecture, architecture_file, weight_file))
             return (architecture_file, weight_file)
 
@@ -72,12 +76,13 @@ class caffe_extractor(base_extractor):
             import caffe
             import numpy as np
             net = caffe.Net(architecture[0], architecture[1], caffe.TEST)
+
             func = TestKit.preprocess_func['caffe'][architecture_name]
             img = func(image_path)
             img = np.transpose(img, (2, 0, 1))
             img = np.expand_dims(img, 0)
             net.blobs['data'].data[...] = img
-            predict = np.squeeze(net.forward()[net._layer_names[-1]][0])
+            predict = np.squeeze(net.forward()[net._output_list[-1]][0])
             predict = np.squeeze(predict)
             return predict
 

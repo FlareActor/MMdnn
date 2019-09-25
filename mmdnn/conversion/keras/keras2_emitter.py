@@ -63,9 +63,9 @@ import tensorflow as tf
 weights_dict = dict()
 def load_weights_from_file(weight_file):
     try:
-        weights_dict = np.load(weight_file).item()
+        weights_dict = np.load(weight_file, allow_pickle=True).item()
     except:
-        weights_dict = np.load(weight_file, encoding='bytes').item()
+        weights_dict = np.load(weight_file, allow_pickle=True, encoding='bytes').item()
 
     return weights_dict
 
@@ -92,9 +92,13 @@ def set_layer_weights(model, weights_dict):
                     current_layer_parameters.append(cur_dict['bias'])
             elif layer.__class__.__name__ == "Embedding":
                 current_layer_parameters.append(cur_dict['weights'])
+            elif layer.__class__.__name__ == "PReLU":
+                gamma =  np.ones(list(layer.input_shape[1:]))*cur_dict['gamma']
+                current_layer_parameters.append(gamma)
             else:
-                # rot weights
-                current_layer_parameters = [cur_dict['weights']]
+                # rot 
+                if 'weights' in cur_dict:
+                    current_layer_parameters = [cur_dict['weights']]
                 if 'bias' in cur_dict:
                     current_layer_parameters.append(cur_dict['bias'])
             model.get_layer(layer.name).set_weights(current_layer_parameters)
@@ -486,6 +490,14 @@ def KitModel(weight_file = None):
         return code
 
 
+    def emit_Elu(self, IR_node):
+        self._emit_activation(IR_node, 'elu')
+
+
+    def emit_Relu(self, IR_node):
+        self._emit_activation(IR_node, 'relu')
+
+
     def emit_Tanh(self, IR_node, in_scope=False):
         code = self._emit_activation(IR_node, 'tanh', in_scope)
         return code
@@ -847,6 +859,34 @@ def KitModel(weight_file = None):
             return self._emit_merge(IR_node, 'Minimum')
 
 
+    def emit_PRelu(self, IR_node, in_scope=False):
+        if in_scope:
+            raise NotImplementedError
+        else:
+            code = "{:<15} = layers.PReLU(name='{}')({})".format(
+                IR_node.variable_name,
+                IR_node.name,
+                self.parent_variable_name(IR_node)
+            )
+            return code
+
+    def emit_Affine(self, IR_node, in_scope=False):
+        if in_scope:
+            raise NotImplementedError
+        else:
+            self.used_layers.add('Affine')
+            if IR_node.layer.attr.get('beta', None) is None:
+                bias = None
+            else:
+                bias = IR_node.layer.attr['beta'].f
+            code = "{:<15} = Affine(name='{}', scale={}, bias={})({})".format(
+                IR_node.variable_name,
+                IR_node.name,
+                IR_node.layer.attr['gamma'].f,
+                bias,
+                self.parent_variable_name(IR_node))
+            return code
+
     def emit_yolo(self, IR_node, in_scope=False):
         self.used_layers.add('Yolo')
         self.yolo_parameter = [IR_node.get_attr('anchors'),
@@ -1166,6 +1206,28 @@ class Scale(Layer):
 
     def compute_output_shape(self, input_shape):
         return input_shape""")
+
+
+    def _layer_Affine(self):
+        self.add_body(0, '''
+from keras.engine import Layer, InputSpec
+from keras import initializers
+from keras  import backend as K
+
+class Affine(Layer):
+    def __init__(self, scale, bias=None, **kwargs):
+        super(Affine, self).__init__(**kwargs)
+        self.gamma = scale
+        self.beta = bias
+
+    def call(self, inputs, training=None):
+        input_shape = K.int_shape(inputs)
+        # Prepare broadcasting shape.
+        return self.gamma * inputs + self.beta
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
+        ''')
 
 
     def _layer_Split(self):

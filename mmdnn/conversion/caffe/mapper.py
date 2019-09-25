@@ -142,10 +142,18 @@ class NodeMapper(object):
 
 
     @classmethod
+    def map_elu(cls, node):
+        kwargs = {}
+        cls._convert_output_shape(kwargs, node)
+        return Node.create('ELU', **kwargs)
+
+
+    @classmethod
     def map_relu(cls, node):
         kwargs = {}
         cls._convert_output_shape(kwargs, node)
         return Node.create('Relu', **kwargs)
+
 
     @classmethod
     def map_p_re_lu(cls, node):
@@ -248,12 +256,21 @@ class NodeMapper(object):
 
     @classmethod
     def map_scale(cls, node):
-        raise NotImplementedError
         # TODO: The gamma parameter has to be set (in node.data?) and this should work.
         # Also, mean should be set to 0, and var to 1, just to be safe.
-        scale_value = float(node.parameters.filler.value)
-        kwargs = {'scale' : True, 'bias' : False, 'gamma' : scale_value, 'epsilon': 0}
-        return Node.create('BatchNorm', **kwargs)
+        if node.data:
+            scale_value = float(node.parameters.filler.value)
+            if node.parameters.bias_term:
+                bias_value = float(node.parameters.bias_filler.value)
+                kwargs = {'use_scale' : True, 'use_bias' : node.parameters.bias_term, 'gamma' : scale_value, 'beta': bias_value, 'epsilon': 0}
+            else:
+                kwargs = {'use_scale' : True, 'use_bias' : node.parameters.bias_term, 'gamma' : scale_value, 'epsilon': 0}
+
+            cls._convert_output_shape(kwargs, node)
+            return Node.create('Affine', **kwargs)
+        else:
+            return Node.create('Mul')
+
 
     @classmethod
     def map_eltwise(cls, node):
